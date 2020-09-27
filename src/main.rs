@@ -1,8 +1,24 @@
 use std::io;
+use std::fmt;
 
 // s eeee fff
-fn main() {
+struct MyBfloat8 {
+    is_neg: bool,   // s
+    exponent: i32,  // eeee -8(denormal), -7～6, 7(無限大)
+    frac: i32,      // fff  1.fff(normalの場合) or 0.fff(denormalの場合)
+}
 
+impl fmt::Display for MyBfloat8 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(s:{:#>1b} expo:{:#>04b} fra:{:#>03b})=(-1^{} * 1.{:#>03b}b * 2^{})",
+            self.is_neg as i32, self.exponent, self.frac,
+            self.is_neg as i32, self.frac, (self.exponent - 8), 
+        )
+        // REVISIT 無限大と非正規化数
+    }
+}
+
+fn main() {
     let mut instr = String::new();
     io::stdin().read_line(&mut instr)
         .expect("Failed to read line");
@@ -81,5 +97,12 @@ fn main() {
     }
 
     // 表示
-    println!("{:#>1b} {:#>04b} {:#>03b}", is_neg as i32, (exponent + 8), bits);
+//    println!("{:#>1b} {:#>04b} {:#>03b}", is_neg as i32, (exponent + 8), bits);
+
+    let bf8 = MyBfloat8 {
+        is_neg: is_neg,
+        exponent: (exponent + 8),
+        frac: bits,
+    };
+    println!("{}", bf8);
 }
