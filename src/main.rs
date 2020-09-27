@@ -21,8 +21,8 @@ fn main() {
     let mut is_underflow: bool = false; // underflow
 
     // 2. 指数部
-    if 1.0 <= fnum_abs {
-        while 1.0 <= fnum_abs {
+    if 2.0 <= fnum_abs {
+        while 2.0 <= fnum_abs {
             exponent += 1;
             fnum_abs /= 2.0;
             if 7 <= exponent {   // eeee(-8(denormal), -7～6, 7(無限大))
@@ -32,14 +32,14 @@ fn main() {
         }
     }
 
-    if fnum_abs < 0.5 {
-        while fnum_abs <= 0.5 {
-            exponent -= 1;
-            fnum_abs *= 2.0;
-            if exponent <= -8 {
-                is_infinite = true;
+    if fnum_abs < 1.0 {
+        while fnum_abs < 1.0 {
+            if exponent <= -7 {
+                is_underflow = true;    // 0.fff x 2^-7の形式
                 break;
             }
+            exponent -= 1;
+            fnum_abs *= 2.0;
         }
     }
 
@@ -51,28 +51,35 @@ fn main() {
     // bit pattern of frac
     let mut bits = 0;
     if is_infinite {
-        bits = 0;           // 無限大の場合、frac=0
+        bits = 0;               // 無限大の場合、frac=0 (補足：frac≠0はNaN)
     } else {
-        fnum_abs -= 0.5;        // 0.1b は削除
+        if is_underflow == false {
+            fnum_abs -= 1.0;    // 正規化数の場合は、整数部1を削除
+        }
+
         // 0x04
         fnum_abs *= 2.0;
-        if fnum_abs >= 0.5 {
+        if fnum_abs >= 1.0 {
             bits += 0x04;
-            fnum_abs -= 0.5;
+            fnum_abs -= 1.0;
         }
         // 0x02
         fnum_abs *= 2.0;
-        if fnum_abs >= 0.5 {
+        if fnum_abs >= 1.0 {
             bits += 0x02;
-            fnum_abs -= 0.5;
+            fnum_abs -= 1.0;
         }
         // 0x01
         fnum_abs *= 2.0;
-        if fnum_abs >= 0.5 {
+        if fnum_abs >= 1.0 {
             bits += 0x01;
-            fnum_abs -= 0.5;
+            fnum_abs -= 1.0;
         }
     }
+    if is_underflow {
+        exponent = -8;
+    }
+
     // 表示
     println!("{:#>1b} {:#>04b} {:#>03b}", is_neg as i32, (exponent + 8), bits);
 }
