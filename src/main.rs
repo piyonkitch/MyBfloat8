@@ -10,11 +10,28 @@ struct MyBfloat8 {
 
 impl fmt::Display for MyBfloat8 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(s:{:#>1b} expo:{:#>04b} fra:{:#>03b})=(-1^{} * 1.{:#>03b}b * 2^{})",
-            self.is_neg as i32, self.exponent, self.frac,
-            self.is_neg as i32, self.frac, (self.exponent - 8), 
-        )
-        // REVISIT 無限大と非正規化数
+        if (self.frac == 0) && (self.exponent == 0) {
+            write!(f, "(s:{:#>1b} expo:{:#>04b} fra:{:#>03b})=(-1^{} * 0)",
+                self.is_neg as i32, self.exponent, self.frac,
+                self.is_neg as i32, 
+            )
+        } else if (self.frac == 0) && (self.exponent == 7 + 8) {
+            write!(f, "(s:{:#>1b} expo:{:#>04b} fra:{:#>03b})=(-1^{} * Infinite)",
+                self.is_neg as i32, self.exponent, self.frac,
+                self.is_neg as i32, 
+            )
+        } else if (self.exponent == -8 + 8) {
+            write!(f, "(s:{:#>1b} expo:{:#>04b} fra:{:#>03b})=(-1^{} * 0.{:#>03b}b * 2^{})",
+                self.is_neg as i32, self.exponent, self.frac,
+                self.is_neg as i32, self.frac, (self.exponent - 8 + 1 /* 非正規化数 */), 
+            )
+        } else {
+            write!(f, "(s:{:#>1b} expo:{:#>04b} fra:{:#>03b})=(-1^{} * 1.{:#>03b}b * 2^{})",
+                self.is_neg as i32, self.exponent, self.frac,
+                self.is_neg as i32, self.frac, (self.exponent - 8), 
+            )
+        }
+        // REVISIT 非正規化数
     }
 }
 
