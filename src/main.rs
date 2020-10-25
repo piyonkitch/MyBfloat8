@@ -25,7 +25,7 @@ impl fmt::Display for MyBfloat8 {
                 self.is_neg as i32, self.exponent, self.frac,
                 self.is_neg as i32, 
             )
-        } else if (self.exponent == 7 + 8) && (self.frac == 0) {
+        } else if self.exponent == 7 + 8 {
             write!(f, "(s:{:#>1b} expo:{:#>04b} fra:{:#>03b})=NaN",
                 self.is_neg as i32, self.exponent, self.frac,
             )
@@ -38,6 +38,61 @@ impl fmt::Display for MyBfloat8 {
     }
 }
 
+impl Into<f64> for MyBfloat8 {
+    fn into(self) -> f64 {
+        let mut frac;
+        let mut exponent;
+
+        if (self.exponent == 0) && (self.frac == 0) {
+            frac = 0.0;
+            if self.is_neg {
+                -frac
+            } else {
+                frac
+            }
+        } else if self.exponent == 0 {
+            frac = (self.frac as f64 / 8.0);
+
+            exponent = (self.exponent - 8 + 1 /* 非正規化数 */);
+            while exponent < 0 {
+                frac /= 2.0;
+                exponent += 1;
+            }
+
+            if self.is_neg {
+                -frac
+            } else {
+                frac
+            }
+        } else if (self.exponent == 7 + 8) && (self.frac == 0) {
+            if self.is_neg {
+                f64::NEG_INFINITY
+            } else {
+                f64::INFINITY
+            }
+        } else if self.exponent == 7 + 8 {
+            f64::NAN
+        } else {
+            frac = 1.0 + (self.frac as f64 / 8.0);
+
+            exponent = self.exponent - 8;
+            while exponent < 0 {
+                frac /= 2.0;
+                exponent += 1;
+            }
+            while exponent > 0 {
+                frac *= 2.0;
+                exponent -= 1;
+            }
+
+            if self.is_neg {
+                -frac
+            } else {
+                frac
+            }
+        }
+    }
+}
 
 impl From<f64> for MyBfloat8 {
     fn from(fnum: f64) -> Self {
@@ -130,4 +185,7 @@ fn main() {
 
     let bf8 = MyBfloat8::from(fnum);
     println!("{}", bf8);
+
+    let fnum2: f64 = MyBfloat8::into(bf8);
+    println!("fnum2={}", fnum2);
 }
