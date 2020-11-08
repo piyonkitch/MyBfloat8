@@ -1,6 +1,7 @@
 use std::io;
 use std::fmt;       // format in print
 use rand::Rng;      // random number
+use getopt::prelude::*;
 
 // s eeee fff
 struct MyBfloat8 {
@@ -171,33 +172,59 @@ impl From<f64> for MyBfloat8 {
 }
 
 
-fn main() {
-    let mut instr = String::new();
-    io::stdin().read_line(&mut instr)
-        .expect("Failed to read line");
-    let fnum: f64 = instr.trim().parse()
-        .expect("Please type a number!");
+fn main() -> Result<(), Box<dyn std::error::Error>> {       // getopt用
 
-    println!("{}", fnum);
+    let mut args: Vec<String> = std::env::args().collect();
+    let mut opts = Parser::new(&args, "ir:");
 
-    let bf8 = MyBfloat8::from(fnum);
-    println!("{}", bf8);
-
-    let fnum2: f64 = MyBfloat8::into(bf8);
-    println!("fnum2={}", fnum2);
-
-
-    let mut rng = rand::thread_rng();
-    let mut _cnt: i32;
-    let mut rnd_fnum: f64;
-    let mut mybfloat8num: MyBfloat8;
-    let mut fnum_from_mybload8: f64;
-
-    for _cnt in 1..1000
-    {
-        rnd_fnum = rng.gen::<f64>() * 128.0;
-        mybfloat8num = MyBfloat8::from(rnd_fnum);
-        fnum_from_mybload8 = MyBfloat8::into(mybfloat8num);
-        println!("{}\t{}", rnd_fnum, fnum_from_mybload8);
+    let mut i_flag = false;
+    let mut r_flag: f64 = 0.0;
+    loop {
+        match opts.next().transpose()? {
+            None => break,
+            Some(opt) => match opt {
+                Opt('i', None) => i_flag = true,
+                Opt('r', Some(string)) => r_flag = string.clone().trim().parse()
+                    .expect("Please enter a numer after -r"),
+                _ => unreachable!(),
+            }
+        }
     }
+
+    let args = args.split_off(opts.index());
+
+    if i_flag
+    {
+        let mut instr = String::new();
+        io::stdin().read_line(&mut instr)
+            .expect("Failed to read line");
+        let fnum: f64 = instr.trim().parse()
+            .expect("Please type a number!");
+
+        println!("{}", fnum);
+
+        let bf8 = MyBfloat8::from(fnum);
+        println!("{}", bf8);
+
+        let fnum2: f64 = MyBfloat8::into(bf8);
+        println!("fnum2={}", fnum2);
+    }
+    else if r_flag != 0.0
+    {
+        let mut rng = rand::thread_rng();
+        let mut _cnt: i32;
+        let mut rnd_fnum: f64;
+        let mut mybfloat8num: MyBfloat8;
+        let mut fnum_from_mybload8: f64;
+
+        for _cnt in 1..1000
+        {
+            rnd_fnum = rng.gen::<f64>() * r_flag;
+            mybfloat8num = MyBfloat8::from(rnd_fnum);
+            fnum_from_mybload8 = MyBfloat8::into(mybfloat8num);
+            println!("{}\t{}", rnd_fnum, fnum_from_mybload8);
+        }
+    }
+
+    Ok(())
 }
