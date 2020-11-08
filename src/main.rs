@@ -1,5 +1,6 @@
 use std::io;
-use std::fmt;
+use std::fmt;       // format in print
+use rand::Rng;      // random number
 
 // s eeee fff
 struct MyBfloat8 {
@@ -51,9 +52,9 @@ impl Into<f64> for MyBfloat8 {
                 frac
             }
         } else if self.exponent == 0 {
-            frac = (self.frac as f64 / 8.0);
+            frac = self.frac as f64 / 8.0;
 
-            exponent = (self.exponent - 8 + 1 /* 非正規化数 */);
+            exponent = self.exponent - 8 + 1 /* 非正規化数 */;
             while exponent < 0 {
                 frac /= 2.0;
                 exponent += 1;
@@ -127,11 +128,7 @@ impl From<f64> for MyBfloat8 {
             }
         }
 
-        println!("exponent is {}", exponent);
-
         // 3. 無限大、非正規化数、正規化数のいずれか
-        let mut bits = 0;
-        println!("{} {}", is_neg, fnum_abs);
         // bit pattern of frac
         let mut bits = 0;
         if is_infinite {
@@ -188,4 +185,19 @@ fn main() {
 
     let fnum2: f64 = MyBfloat8::into(bf8);
     println!("fnum2={}", fnum2);
+
+
+    let mut rng = rand::thread_rng();
+    let mut _cnt: i32;
+    let mut rnd_fnum: f64;
+    let mut mybfloat8num: MyBfloat8;
+    let mut fnum_from_mybload8: f64;
+
+    for _cnt in 1..1000
+    {
+        rnd_fnum = rng.gen::<f64>() * 128.0;
+        mybfloat8num = MyBfloat8::from(rnd_fnum);
+        fnum_from_mybload8 = MyBfloat8::into(mybfloat8num);
+        println!("{}\t{}", rnd_fnum, fnum_from_mybload8);
+    }
 }
