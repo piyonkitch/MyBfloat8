@@ -191,7 +191,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {       // getopt用
         }
     }
 
-    let args = args.split_off(opts.index());
+    let _args = args.split_off(opts.index());
 
     if i_flag
     {
@@ -201,13 +201,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {       // getopt用
         let fnum: f64 = instr.trim().parse()
             .expect("Please type a number!");
 
-        println!("{}", fnum);
-
         let bf8 = MyBfloat8::from(fnum);
         println!("{}", bf8);
 
         let fnum2: f64 = MyBfloat8::into(bf8);
-        println!("fnum2={}", fnum2);
+        println!("This bfloat8 is {} as f64", fnum2);
     }
     else if r_flag != 0.0
     {
